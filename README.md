@@ -2,8 +2,6 @@
 
 **Projet de fin de trimestre** - Reconnaissance faciale des acteurs Harry Potter containerisée avec Docker.
 
-**Groupe:** 3 personnes | **Deadline:** 5 juin 2026
-
 ---
 
 ## 📋 Vue d'ensemble
