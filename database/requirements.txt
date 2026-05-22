@@ -1,1 +1,29 @@
+# =========================================================
+# Dépendances Python - Harry Potter Face Recognition
+# =========================================================
 
+# Base de données & ORM
+sqlalchemy==2.0.23
+pymysql==1.1.0
+mysql-connector-python==8.2.0
+
+# Machine Learning & Computer Vision
+torch==2.1.2
+torchvision==0.16.2
+facenet-pytorch==2.5.3
+numpy==1.24.3
+scikit-learn==1.3.2
+Pillow==10.0.1
+
+# Web Framework (optionnel si Flask app)
+flask==3.0.0
+flask-cors==4.0.0
+
+# Utilitaires
+python-dotenv==1.0.0
+tqdm==4.66.1
+pandas==2.1.3
+requests==2.31.0
+
+# Logging & Monitoring
+python-json-logger==2.0.7
