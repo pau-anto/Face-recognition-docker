@@ -1,0 +1,62 @@
+# =========================================================
+# Dockerfile.db — MySQL 8.0
+# Harry Potter Face Recognition
+# BD : hp_recognition | User : wpuser | Port : 3306
+# =========================================================
+
+FROM mysql:8.0
+
+# ── Labels ────────────────────────────────────────────────
+LABEL maintainer="pau-anto"
+LABEL project="hp-face-recognition"
+LABEL description="MySQL database for Harry Potter Face Recognition"
+
+# ── Variables d'environnement MySQL ───────────────────────
+# Ces valeurs peuvent être surchargées via docker-compose ou --env-file
+ENV MYSQL_ROOT_PASSWORD=root_password
+ENV MYSQL_DATABASE=hp_recognition
+ENV MYSQL_USER=wpuser
+ENV MYSQL_PASSWORD=wppass
+
+# ── Encodage UTF-8 (accents dans les noms de personnages) ──
+ENV LANG=C.UTF-8
+
+# ── Script d'initialisation ───────────────────────────────
+# MySQL exécute automatiquement tout .sql placé dans ce dossier
+# au premier démarrage (quand le volume est vide).
+# Le préfixe "01-" garantit l'ordre d'exécution.
+
+
+COPY database/schema.sql /docker-entrypoint-initdb.d/schema.sql
+
+
+
+
+# ── Configuration MySQL personnalisée ─────────────────────
+# Active utf8mb4 pour tous les jeux de caractères
+# et augmente max_allowed_packet pour les embeddings binaires (LONGBLOB)
+RUN echo "[mysqld]\n\
+character-set-server=utf8mb4\n\
+collation-server=utf8mb4_unicode_ci\n\
+max_allowed_packet=128M\n\
+\n\
+[client]\n\
+default-character-set=utf8mb4" > /etc/mysql/conf.d/hp_recognition.cnf
+
+# ── Port exposé ───────────────────────────────────────────
+EXPOSE 3306
+
+# ── Volume de persistance ─────────────────────────────────
+# À monter via docker-compose pour persister les données
+# entre les redémarrages du container.
+VOLUME ["/var/lib/mysql"]
+
+# ── Healthcheck ───────────────────────────────────────────
+# Vérifie que MySQL est prêt à accepter des connexions.
+# L'app attendra ce statut "healthy" avant de démarrer (via docker-compose).
+HEALTHCHECK --interval=10s --timeout=5s --start-period=30s --retries=5 \
+    CMD mysqladmin ping -h localhost -u"${MYSQL_USER}" -p"${MYSQL_PASSWORD}" --silent
+
+# ── CMD ───────────────────────────────────────────────────
+# Héritée de l'image mysql:8.0 : lance mysqld
+# CMD ["mysqld"]
