@@ -6,10 +6,6 @@
 
 FROM mysql:8.0
 
-# ── Labels ────────────────────────────────────────────────
-LABEL maintainer="pau-anto"
-LABEL project="hp-face-recognition"
-LABEL description="MySQL database for Harry Potter Face Recognition"
 
 # ── Variables d'environnement MySQL ───────────────────────
 # Ces valeurs peuvent être surchargées via docker-compose ou --env-file
@@ -22,26 +18,9 @@ ENV MYSQL_PASSWORD=wppass
 ENV LANG=C.UTF-8
 
 # ── Script d'initialisation ───────────────────────────────
-# MySQL exécute automatiquement tout .sql placé dans ce dossier
-# au premier démarrage (quand le volume est vide).
-# Le préfixe "01-" garantit l'ordre d'exécution.
-
-
 COPY database/schema.sql /docker-entrypoint-initdb.d/schema.sql
 
 
-
-
-# ── Configuration MySQL personnalisée ─────────────────────
-# Active utf8mb4 pour tous les jeux de caractères
-# et augmente max_allowed_packet pour les embeddings binaires (LONGBLOB)
-RUN echo "[mysqld]\n\
-character-set-server=utf8mb4\n\
-collation-server=utf8mb4_unicode_ci\n\
-max_allowed_packet=128M\n\
-\n\
-[client]\n\
-default-character-set=utf8mb4" > /etc/mysql/conf.d/hp_recognition.cnf
 
 # ── Port exposé ───────────────────────────────────────────
 EXPOSE 3306
