@@ -12,17 +12,17 @@ FROM python:3.11-slim AS builder
 
 WORKDIR /build
 
-# Dépendances système nécessaires à la compilation
-# (Pillow → libjpeg/zlib ; torch → libgomp ; pymysql → libssl)
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    gcc \
-    g++ \
-    libgomp1 \
-    libjpeg-dev \
-    zlib1g-dev \
-    libssl-dev \
-    pkg-config \
-    && rm -rf /var/lib/apt/lists/*
+# # Dépendances système nécessaires à la compilation
+# # (Pillow → libjpeg/zlib ; torch → libgomp ; pymysql → libssl)
+# RUN apt-get update && apt-get install -y --no-install-recommends \
+#     gcc \
+#     g++ \
+#     libgomp1 \
+#     libjpeg-dev \
+#     zlib1g-dev \
+#     libssl-dev \
+#     pkg-config \
+#     && rm -rf /var/lib/apt/lists/*
 
 # Copier uniquement le fichier de dépendances d'abord
 # → Docker met en cache cette couche tant que requirements.txt ne change pas
@@ -36,17 +36,14 @@ RUN pip install --upgrade pip && \
 # ── Stage 2 : image finale ────────────────────────────────
 FROM python:3.11-slim
 
-LABEL maintainer="pau-anto"
-LABEL project="hp-face-recognition"
-LABEL description="Flask ML app — Face recognition des acteurs Harry Potter"
 
-# ── Dépendances runtime uniquement (pas les outils de compilation) ──
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    libgomp1 \
-    libjpeg62-turbo \
-    zlib1g \
-    curl \
-    && rm -rf /var/lib/apt/lists/*
+# # ── Dépendances runtime uniquement (pas les outils de compilation) ──
+# RUN apt-get update && apt-get install -y --no-install-recommends \
+#     libgomp1 \
+#     libjpeg62-turbo \
+#     zlib1g \
+#     curl \
+#     && rm -rf /var/lib/apt/lists/*
 
 # ── Copier les packages Python installés depuis le builder ─
 COPY --from=builder /install /usr/local
@@ -101,5 +98,6 @@ COPY docker/wait-for-db.sh /wait-for-db.sh
 RUN chmod +x /wait-for-db.sh
 
 # ── Point d'entrée ────────────────────────────────────────
-ENTRYPOINT ["/wait-for-db.sh"]
+# Script wait-for-db.sh : boucle d'attente TCP avant de lancer Flask → évite le crash au démarrage si MySQL n'est pas encore prêt
+ENTRYPOINT ["/wait-for-db.sh"] 
 CMD ["python", "app/main.py"]
