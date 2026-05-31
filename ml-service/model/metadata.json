@@ -1,0 +1,34 @@
+{
+  "classes": [
+    "Albus Dumbledore",
+    "Arthur Weasley",
+    "Bellatrix Lestrange",
+    "Dean Thomas",
+    "Draco Malfoy",
+    "Ginny Weasley",
+    "Harry Potter",
+    "Hermione Granger",
+    "Lord Voldemort",
+    "Luna Lovegood",
+    "Minerva McGonagall",
+    "Molly Weasley",
+    "Neville Longbottom",
+    "Ron Weasley",
+    "Rubeus Hagrid",
+    "Severus Snape"
+  ],
+  "input_size": [
+    160,
+    160
+  ],
+  "mean": [
+    0.5,
+    0.5,
+    0.5
+  ],
+  "std": [
+    0.5,
+    0.5,
+    0.5
+  ]
+}

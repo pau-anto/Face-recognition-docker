@@ -1,0 +1,82 @@
+
+services:
+
+  frontend:
+    build: ./frontend
+    container_name: hp_frontend
+    ports:
+      - "8501:8501"        # port par défaut de Streamlit
+    depends_on:
+      - api
+    networks:
+      - public-network
+    # env_file: .env
+
+  api:
+    build: ./api
+    container_name: hp_api
+    ports:
+      - "8000:8000"
+    environment:
+      - DB_HOST=database
+      - DB_USER=${DB_USER}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - DB_NAME=${DB_NAME}
+      - ML_SERVICE_URL=http://ml-service:8001
+    depends_on:
+      - database   
+      - ml-service
+    networks:
+      - public-network
+      - internal-network
+      - private-network
+    env_file: .env
+
+  ml-service:
+    build: ./ml-service
+    container_name: hp_ml_service
+    environment:
+      - MODEL_PATH=/app/model/harry_model.pkl
+      - METADATA_PATH=/app/model/metadata.json
+    volumes:
+      - ./ml-service/model:/app/model 
+    networks:
+      - internal-network
+    # pas de ports exposés à l'extérieur
+
+
+  database:
+    image: mysql:8.0
+    container_name: hp_database
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${DB_NAME}
+      MYSQL_USER: ${DB_USER}
+      MYSQL_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql
+    # healthcheck:
+    #   test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+    #   interval: 10s
+    #   retries: 5
+    # env_file: .env
+    # healthcheck:
+    #   test: ["CMD", "mysql", "-u", "root", "-e", "SELECT 1"]
+    #   interval: 10s
+    #   timeout: 5s
+    #   retries: 5
+    #   start_period: 40s
+    networks:
+      - private-network
+
+networks:
+  public-network:
+    driver: bridge
+  internal-network:
+    driver: bridge
+  private-network:
+    driver: bridge
+
+volumes:
+  mysql_data:
