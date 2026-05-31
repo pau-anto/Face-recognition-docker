@@ -13,7 +13,7 @@ if uploaded:
 )
             if response.status_code == 200:
                 data = response.json()
-                st.success(f"🧙‍♂️ {data[character_name]} (confidence: {data['confidence']:.2%})")
+                st.success(f"🧙‍♂️ {data['character']} (confidence: {data['confidence']:.2%})")
                 st.balloons()
             else:
                 st.error("Error during prediction")

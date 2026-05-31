@@ -1,16 +1,14 @@
-
 services:
 
   frontend:
     build: ./frontend
     container_name: hp_frontend
     ports:
-      - "8501:8501"        # port par défaut de Streamlit
+      - "8501:8501"
     depends_on:
       - api
     networks:
       - public-network
-    # env_file: .env
 
   api:
     build: ./api
@@ -24,13 +22,14 @@ services:
       - DB_NAME=${DB_NAME}
       - ML_SERVICE_URL=http://ml-service:8001
     depends_on:
-      - database   
+      - database
       - ml-service
     networks:
       - public-network
       - internal-network
       - private-network
     env_file: .env
+    restart: on-failure   # ← relance auto si la DB n'est pas encore prête
 
   ml-service:
     build: ./ml-service
@@ -39,11 +38,9 @@ services:
       - MODEL_PATH=/app/model/harry_model.pkl
       - METADATA_PATH=/app/model/metadata.json
     volumes:
-      - ./ml-service/model:/app/model 
+      - ./ml-service/model:/app/model
     networks:
       - internal-network
-    # pas de ports exposés à l'extérieur
-
 
   database:
     image: mysql:8.0
@@ -56,17 +53,6 @@ services:
     volumes:
       - mysql_data:/var/lib/mysql
       - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql
-    # healthcheck:
-    #   test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
-    #   interval: 10s
-    #   retries: 5
-    # env_file: .env
-    # healthcheck:
-    #   test: ["CMD", "mysql", "-u", "root", "-e", "SELECT 1"]
-    #   interval: 10s
-    #   timeout: 5s
-    #   retries: 5
-    #   start_period: 40s
     networks:
       - private-network
 

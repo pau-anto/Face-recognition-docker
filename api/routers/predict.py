@@ -19,7 +19,7 @@ async def analyze(file: UploadFile = File(...)):
     result = response.json()
     if result.get("status") != "success":
         raise HTTPException(status_code=400, detail=result.get("message"))
-    save_prediction(result["character_name+"], result["confidence"])
+    save_prediction(result["character"], result["confidence"])
     return result
 
 @router.get("/history")
