@@ -426,29 +426,3 @@ class Database:
             return json_str
         finally:
             session.close()
-
-
-# =========================================================
-# EXEMPLE D'UTILISATION
-# =========================================================
-
-if __name__ == "__main__":
-    # Connexion à la BD
-    db = Database(
-        user="wpuser",
-        password="wppass",
-        host="localhost",
-        port=3306,
-        database="hp_recognition"
-    )
-    
-    # Créer les tables
-    db.create_tables()
-    
-    # Récupérer les personnages
-    characters = db.get_all_characters()
-    print(f"{len(characters)} personnages trouvés")
-    
-    # Récupérer les stats
-    stats = db.get_global_stats()
-    print(f"Stats: {stats}")

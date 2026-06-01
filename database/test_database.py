@@ -16,7 +16,7 @@ END = '\033[0m'
 
 def test_connection():
     """Test 1: Connexion à MySQL"""
-    print(f"\n{YELLOW}🔍 Test 1: Connexion à MySQL...{END}")
+    print(f"\n{YELLOW}Test 1: Connexion à MySQL...{END}")
     try:
         db = Database(
             user="root",
@@ -25,44 +25,44 @@ def test_connection():
             port=3307,
             database="hp_recognition"
         )
-        print(f"{GREEN}✅ Connexion réussie!{END}")
+        print(f"{GREEN}Connexion réussie!{END}")
         return db
     except Exception as e:
-        print(f"{RED}❌ Erreur: {e}{END}")
+        print(f"{RED}Erreur: {e}{END}")
         return None
 
 
 def test_create_tables(db):
     """Test 2: Création des tables"""
-    print(f"\n{YELLOW}🔍 Test 2: Création des tables...{END}")
+    print(f"\n{YELLOW}Test 2: Création des tables...{END}")
     try:
         db.create_tables()
-        print(f"{GREEN}✅ Tables créées/vérifiées!{END}")
+        print(f"{GREEN}Tables créées/vérifiées!{END}")
         return True
     except Exception as e:
-        print(f"{RED}❌ Erreur: {e}{END}")
+        print(f"{RED}Erreur: {e}{END}")
         return False
 
 
 def test_get_characters(db):
     """Test 3: Récupération des personnages"""
-    print(f"\n{YELLOW}🔍 Test 3: Récupération des personnages...{END}")
+    print(f"\n{YELLOW}Test 3: Récupération des personnages...{END}")
     try:
         characters = db.get_all_characters()
-        print(f"{GREEN}✅ {len(characters)} personnages trouvés:{END}")
+        print(f"{GREEN}{len(characters)} personnages trouvés:{END}")
         for char in characters[:3]:
             print(f"   - {char['name']} ({char['actor']})")
         if len(characters) > 3:
             print(f"   ... et {len(characters) - 3} autres")
         return True
     except Exception as e:
-        print(f"{RED}❌ Erreur: {e}{END}")
+        print(f"{RED}Erreur: {e}{END}")
         return False
 
 
 def test_add_image(db):
     """Test 4: Ajout d'une image"""
-    print(f"\n{YELLOW}🔍 Test 4: Ajout d'une image...{END}")
+    print(f"\n{YELLOW}Test 4: Ajout d'une image...{END}")
     try:
         image = db.add_image(
             character_name="Harry Potter",
@@ -72,19 +72,19 @@ def test_add_image(db):
             dataset_type="test"
         )
         if image:
-            print(f"{GREEN}✅ Image ajoutée (ID: {image.id}){END}")
+            print(f"{GREEN}Image ajoutée (ID: {image.id}){END}")
             return image
         else:
-            print(f"{RED}❌ Erreur lors de l'ajout{END}")
+            print(f"{RED}Erreur lors de l'ajout{END}")
             return None
     except Exception as e:
-        print(f"{RED}❌ Erreur: {e}{END}")
+        print(f"{RED}Erreur: {e}{END}")
         return None
 
 
 def test_add_embedding(db, image):
     """Test 5: Ajout d'un embedding"""
-    print(f"\n{YELLOW}🔍 Test 5: Ajout d'un embedding...{END}")
+    print(f"\n{YELLOW}Test 5: Ajout d'un embedding...{END}")
     try:
         # Créer un vecteur aléatoire 128D (simule FaceNet)
         embedding_vector = np.random.rand(128).astype(np.float32)
@@ -96,19 +96,19 @@ def test_add_embedding(db, image):
             processing_time_ms=45
         )
         if emb:
-            print(f"{GREEN}✅ Embedding sauvegardé (ID: {emb.id}){END}")
+            print(f"{GREEN}Embedding sauvegardé (ID: {emb.id}){END}")
             return True
         else:
-            print(f"{RED}❌ Erreur{END}")
+            print(f"{RED}Erreur{END}")
             return False
     except Exception as e:
-        print(f"{RED}❌ Erreur: {e}{END}")
+        print(f"{RED}Erreur: {e}{END}")
         return False
 
 
 def test_add_prediction(db, image):
     """Test 6: Ajout d'une prédiction"""
-    print(f"\n{YELLOW}🔍 Test 6: Ajout d'une prédiction...{END}")
+    print(f"\n{YELLOW}Test 6: Ajout d'une prédiction...{END}")
     try:
         pred = db.add_prediction(
             image_id=image.id,
@@ -121,64 +121,64 @@ def test_add_prediction(db, image):
             run_id="test_run_2026"
         )
         if pred:
-            print(f"{GREEN}✅ Prédiction sauvegardée (ID: {pred.id}){END}")
+            print(f"{GREEN}Prédiction sauvegardée (ID: {pred.id}){END}")
             print(f"   - Correct: {pred.is_correct}")
             print(f"   - Confiance: {pred.confidence_score:.4f}")
             return True
         else:
-            print(f"{RED}❌ Erreur{END}")
+            print(f"{RED}Erreur{END}")
             return False
     except Exception as e:
-        print(f"{RED}❌ Erreur: {e}{END}")
+        print(f"{RED}Erreur: {e}{END}")
         return False
 
 
 def test_get_stats(db):
     """Test 7: Récupération des statistiques"""
-    print(f"\n{YELLOW}🔍 Test 7: Récupération des statistiques...{END}")
+    print(f"\n{YELLOW}Test 7: Récupération des statistiques...{END}")
     try:
         stats = db.get_global_stats()
-        print(f"{GREEN}✅ Statistiques globales:{END}")
+        print(f"{GREEN}Statistiques globales:{END}")
         for key, value in stats.items():
             print(f"   - {key}: {value}")
         return True
     except Exception as e:
-        print(f"{RED}❌ Erreur: {e}{END}")
+        print(f"{RED}Erreur: {e}{END}")
         return False
 
 
 def test_get_recent_predictions(db):
     """Test 8: Récupération des prédictions récentes"""
-    print(f"\n{YELLOW}🔍 Test 8: Récupération des prédictions récentes...{END}")
+    print(f"\n{YELLOW}Test 8: Récupération des prédictions récentes...{END}")
     try:
         predictions = db.get_recent_predictions(limit=5)
         if predictions:
-            print(f"{GREEN}✅ {len(predictions)} prédictions récentes:{END}")
+            print(f"{GREEN}{len(predictions)} prédictions récentes:{END}")
             for p in predictions[:3]:
                 print(f"   - ID {p['id']}: {p['confidence']:.4f} confiance")
         else:
-            print(f"{YELLOW}⚠️  Aucune prédiction (normal au premier lancement){END}")
+            print(f"{YELLOW}Aucune prédiction (normal au premier lancement){END}")
         return True
     except Exception as e:
-        print(f"{RED}❌ Erreur: {e}{END}")
+        print(f"{RED}Erreur: {e}{END}")
         return False
 
 
 def main():
     """Lance tous les tests"""
     print("=" * 70)
-    print("🧙‍♂️  TESTS BASE DE DONNÉES - Harry Potter Face Recognition")
+    print("TESTS BASE DE DONNÉES - Harry Potter Face Recognition")
     print("=" * 70)
     
     # Test 1: Connexion
     db = test_connection()
     if not db:
-        print(f"\n{RED}❌ Impossible de continuer sans connexion à la BD{END}")
+        print(f"\n{RED}Impossible de continuer sans connexion à la BD{END}")
         sys.exit(1)
     
     # Test 2: Créer les tables
     if not test_create_tables(db):
-        print(f"\n{RED}❌ Impossible de continuer sans tables{END}")
+        print(f"\n{RED}Impossible de continuer sans tables{END}")
         sys.exit(1)
     
     # Test 3: Récupérer les personnages
@@ -201,9 +201,9 @@ def main():
     
     # Résumé final
     print("\n" + "=" * 70)
-    print(f"{GREEN}✅ TOUS LES TESTS SONT TERMINÉS!{END}")
+    print(f"{GREEN}TOUS LES TESTS SONT TERMINÉS!{END}")
     print("=" * 70)
-    print(f"\n{GREEN}🎉 Votre BD est prête à l'emploi!{END}\n")
+    print(f"\n{GREEN}Votre BD est prête à l'emploi!{END}\n")
 
 
 if __name__ == "__main__":
