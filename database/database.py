@@ -21,7 +21,7 @@ Base = declarative_base()
 
 
 # =========================================================
-# 1️⃣ MODÈLES ORM (Classes Python = Tables SQL)
+# 1 MODÈLES ORM (Classes Python = Tables SQL)
 # =========================================================
 
 class Character(Base):
@@ -129,7 +129,7 @@ class ExecutionLog(Base):
 
 
 # =========================================================
-# 2️⃣ CLASSE DATABASE (Interface principale)
+# 2 CLASSE DATABASE (Interface principale)
 # =========================================================
 
 class Database:
@@ -148,12 +148,12 @@ class Database:
         self.connection_string = f"mysql+pymysql://{user}:{password}@{host}:{port}/{database}?charset=utf8mb4"
         self.engine = create_engine(self.connection_string, echo=False)
         self.Session = sessionmaker(bind=self.engine)
-        logger.info(f"✅ Connecté à {host}:{port}/{database}")
+        logger.info(f"Connecté à {host}:{port}/{database}")
     
     def create_tables(self):
         """Crée toutes les tables (si elles n'existent pas)"""
         Base.metadata.create_all(self.engine)
-        logger.info("✅ Tables de la BD créées/vérifiées")
+        logger.info("Tables de la BD créées/vérifiées")
     
     def get_session(self):
         """Retourne une nouvelle session SQLAlchemy"""
@@ -171,7 +171,7 @@ class Database:
             # Trouver le personnage
             character = session.query(Character).filter_by(name=character_name).first()
             if not character:
-                logger.error(f"❌ Personnage '{character_name}' introuvable")
+                logger.error(f"Personnage '{character_name}' introuvable")
                 return None
             
             # Créer l'image
@@ -184,11 +184,11 @@ class Database:
             )
             session.add(image)
             session.commit()
-            logger.info(f"✅ Image ajoutée: {file_name}")
+            logger.info(f"Image ajoutée: {file_name}")
             return image
         except Exception as e:
             session.rollback()
-            logger.error(f"❌ Erreur: {e}")
+            logger.error(f"Erreur: {e}")
             return None
         finally:
             session.close()
@@ -222,11 +222,11 @@ class Database:
             emb.set_embedding(embedding_vector)
             session.add(emb)
             session.commit()
-            logger.info(f"✅ Embedding sauvegardé pour image {image_id}")
+            logger.info(f"Embedding sauvegardé pour image {image_id}")
             return emb
         except Exception as e:
             session.rollback()
-            logger.error(f"❌ Erreur: {e}")
+            logger.error(f"Erreur: {e}")
             return None
         finally:
             session.close()
@@ -269,11 +269,11 @@ class Database:
             )
             session.add(pred)
             session.commit()
-            logger.info(f"✅ Prédiction sauvegardée (correcte: {is_correct})")
+            logger.info(f"Prédiction sauvegardée (correcte: {is_correct})")
             return pred
         except Exception as e:
             session.rollback()
-            logger.error(f"❌ Erreur: {e}")
+            logger.error(f"Erreur: {e}")
             return None
         finally:
             session.close()
@@ -384,11 +384,11 @@ class Database:
             )
             session.add(log)
             session.commit()
-            logger.info(f"✅ Log d'exécution sauvegardé: {run_id}")
+            logger.info(f"Log d'exécution sauvegardé: {run_id}")
             return log
         except Exception as e:
             session.rollback()
-            logger.error(f"❌ Erreur: {e}")
+            logger.error(f"Erreur: {e}")
             return None
         finally:
             session.close()
@@ -422,7 +422,7 @@ class Database:
             if output_file:
                 with open(output_file, 'w') as f:
                     f.write(json_str)
-                logger.info(f"✅ Prédictions exportées vers {output_file}")
+                logger.info(f"Prédictions exportées vers {output_file}")
             return json_str
         finally:
             session.close()
@@ -447,7 +447,7 @@ if __name__ == "__main__":
     
     # Récupérer les personnages
     characters = db.get_all_characters()
-    print(f"✅ {len(characters)} personnages trouvés")
+    print(f"{len(characters)} personnages trouvés")
     
     # Récupérer les stats
     stats = db.get_global_stats()

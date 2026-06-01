@@ -19,10 +19,10 @@ def test_connection():
     print(f"\n{YELLOW}🔍 Test 1: Connexion à MySQL...{END}")
     try:
         db = Database(
-            user="wpuser",
-            password="wppass",
+            user="root",
+            password="",
             host="localhost",
-            port=3306,
+            port=3307,
             database="hp_recognition"
         )
         print(f"{GREEN}✅ Connexion réussie!{END}")
