@@ -1,6 +1,5 @@
 ================================================================================
          FACE RECOGNITION DOCKER — Harry Potter Character Recognizer
-                           Branche : structure-docker
 ================================================================================
 
   Application web de reconnaissance faciale des personnages Harry Potter,
@@ -266,6 +265,5 @@
 
   Projet académique — 4IABD
   Dépôt : https://github.com/pau-anto/Face-recognition-docker
-  Branche : structure-docker
 
 ================================================================================
