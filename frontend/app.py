@@ -1,19 +1,233 @@
 import streamlit as st
 import requests
+import os
+from PIL import Image
 
-st.title("🪄 Harry Potter Character Recognizer")
-uploaded = st.file_uploader("Upload an image", type=["jpg", "jpeg", "png"])
-
-if uploaded:
-    st.image(uploaded, width=300)
-    if st.button("Identify"):
-        with st.spinner("Analyzing..."):
-            response = requests.post("http://api:8000/analyze/",
-                files={"file": (uploaded.name, uploaded.getvalue(), uploaded.type)}
+# ── Config page ──────────────────────────────────────────────────────────────
+st.set_page_config(
+    page_title="Harry Potter Recognizer",
+    page_icon="🧙",
+    layout="wide"
 )
-            if response.status_code == 200:
-                data = response.json()
-                st.success(f"🧙‍♂️ {data['character']} (confidence: {data['confidence']:.2%})")
-                st.balloons()
-            else:
-                st.error("Error during prediction")
+
+# ── Style CSS (inchangé) ─────────────────────────────────────────────────────
+st.markdown("""
+<style>
+    .hp-header {
+        background: #2d1b69;
+        padding: 1rem 1.5rem;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 1.5rem;
+    }
+    .hp-header h1 {
+        color: #f0e6d3;
+        font-size: 1.4rem;
+        margin: 0;
+        font-weight: 500;
+    }
+    .upload-zone {
+        border: 2px dashed #888;
+        border-radius: 12px;
+        padding: 2rem;
+        text-align: center;
+        background: #f9f9f9;
+        margin-bottom: 1rem;
+    }
+    .result-card {
+        background: white;
+        border: 1px solid #e0e0e0;
+        border-radius: 12px;
+        padding: 1rem 1.25rem;
+        margin-bottom: 1rem;
+    }
+    .badge-gryffindor  { background: #f9e5e5; color: #c9282d; padding: 4px 12px; border-radius: 8px; font-size: 13px; font-weight: 500; }
+    .badge-slytherin   { background: #e5f0e9; color: #1a5c2a; padding: 4px 12px; border-radius: 8px; font-size: 13px; font-weight: 500; }
+    .badge-ravenclaw   { background: #e5eaf5; color: #1a2f7a; padding: 4px 12px; border-radius: 8px; font-size: 13px; font-weight: 500; }
+    .badge-hufflepuff  { background: #fdf5e0; color: #8a6000; padding: 4px 12px; border-radius: 8px; font-size: 13px; font-weight: 500; }
+    #MainMenu { visibility: hidden; }
+    footer    { visibility: hidden; }
+    .metric-box {
+        background: #f4f4f4;
+        border-radius: 8px;
+        padding: 12px;
+        text-align: center;
+    }
+    .metric-label { font-size: 12px; color: #888; margin: 0; }
+    .metric-value { font-size: 22px; font-weight: 500; margin: 4px 0 0; }
+    .info-row {
+        display: flex;
+        justify-content: space-between;
+        font-size: 13px;
+        padding: 7px 0;
+        border-bottom: 1px solid #f0f0f0;
+    }
+    .info-label { color: #888; }
+    .info-value { color: #222; font-weight: 500; }
+    .success-banner {
+        background: #eef6ee;
+        border: 1px solid #a5d6a7;
+        border-radius: 8px;
+        padding: 10px 14px;
+        color: #1b5e20;
+        font-size: 13px;
+        font-weight: 500;
+        margin-bottom: 1rem;
+    }
+    .error-banner {
+        background: #fdecea;
+        border: 1px solid #ef9a9a;
+        border-radius: 8px;
+        padding: 10px 14px;
+        color: #b71c1c;
+        font-size: 13px;
+        margin-bottom: 1rem;
+    }
+    .footer-bar {
+        background: #f4f4f4;
+        border-radius: 8px;
+        padding: 8px 16px;
+        display: flex;
+        justify-content: space-between;
+        font-size: 12px;
+        color: #888;
+        margin-top: 1.5rem;
+    }
+</style>
+""", unsafe_allow_html=True)
+
+# ── Configuration API (interne Docker, non exposée) ──────────────────────────
+API_URL = os.getenv("API_URL", "http://api:8000")   # nom du service dans docker-compose
+ENDPOINT = "/analyze/"
+
+# ── Header ────────────────────────────────────────────────────────────────────
+st.markdown("""
+<div class="hp-header">
+    <span style="font-size:24px;">🧙</span>
+    <h1>Harry Potter — Character Recognizer</h1>
+</div>
+""", unsafe_allow_html=True)
+
+# ── Vérification rapide de l'API (optionnelle) ────────────────────────────────
+def check_api():
+    try:
+        r = requests.get(f"{API_URL}/health", timeout=3)
+        return r.status_code == 200
+    except Exception:
+        return False
+
+api_ok = check_api()
+
+# ── Layout deux colonnes ──────────────────────────────────────────────────────
+col_left, col_right = st.columns([1, 1], gap="large")
+
+with col_left:
+    st.markdown("##### Upload une image")
+    uploaded_file = st.file_uploader(
+        "Glisse une image ici",
+        type=["jpg", "jpeg", "png"],
+        label_visibility="collapsed"
+    )
+    if uploaded_file:
+        image = Image.open(uploaded_file)
+        st.image(image, caption="Image chargée", use_column_width=True)
+    else:
+        st.info("Aucune image sélectionnée — glisse un fichier JPG ou PNG.")
+    st.markdown("<br>", unsafe_allow_html=True)
+    identify_btn = st.button(
+        "🔍  Identifier le personnage",
+        use_container_width=True,
+        disabled=(uploaded_file is None or not api_ok)
+    )
+
+with col_right:
+    st.markdown("##### Résultat")
+    if not uploaded_file:
+        st.markdown("""
+        <div style="text-align:center; padding: 3rem 1rem; color: #aaa;">
+            <div style="font-size:40px; margin-bottom:12px;">🔮</div>
+            <p style="font-size:14px;">Upload une image pour commencer</p>
+        </div>
+        """, unsafe_allow_html=True)
+    elif uploaded_file and not identify_btn:
+        st.markdown("""
+        <div style="text-align:center; padding: 3rem 1rem; color: #aaa;">
+            <div style="font-size:40px; margin-bottom:12px;">✨</div>
+            <p style="font-size:14px;">Image prête — clique sur "Identifier" !</p>
+        </div>
+        """, unsafe_allow_html=True)
+
+    if identify_btn and uploaded_file:
+        with st.spinner("Analyse en cours..."):
+            try:
+                uploaded_file.seek(0)
+                response = requests.post(
+                    f"{API_URL}{ENDPOINT}",
+                    files={"file": (uploaded_file.name, uploaded_file, uploaded_file.type)},
+                    timeout=15
+                )
+                response.raise_for_status()
+                result = response.json()
+
+                character = result.get("character", "Inconnu")
+                confidence = result.get("confidence", 0)
+
+                # Banner de succès
+                st.markdown(f"""
+                <div class="success-banner">
+                    ✅ Personnage identifié : <strong>{character}</strong>
+                </div>
+                """, unsafe_allow_html=True)
+
+                # Affichage de la confiance avec st.metric (fiable)
+                try:
+                    conf_value = float(confidence)
+                    percent = round(conf_value * 100)
+                    conf_display = f"{percent}%"
+                except (TypeError, ValueError):
+                    conf_display = "?"
+
+                st.metric("Confiance", conf_display)
+
+                # Message pour les détails manquants (optionnel)
+                st.markdown("""
+                <div class="result-card">
+                    <p style="font-size:13px; font-weight:500; margin:0 0 10px;">Informations supplémentaires</p>
+                    <div class="info-row">
+                        <span class="info-label">ℹ️</span>
+                        <span class="info-value">Données détaillées non disponibles dans cette version.</span>
+                    </div>
+                </div>
+                """, unsafe_allow_html=True)
+
+            except requests.exceptions.ConnectionError:
+                st.markdown("""
+                <div class="error-banner">
+                    ❌ Impossible de contacter l'API. Vérifie que le service est bien lancé.
+                </div>
+                """, unsafe_allow_html=True)
+            except requests.exceptions.Timeout:
+                st.markdown("""
+                <div class="error-banner">
+                    ⏱️ L'API met trop de temps à répondre. Réessaie dans quelques secondes.
+                </div>
+                """, unsafe_allow_html=True)
+            except Exception as e:
+                st.markdown(f"""
+                <div class="error-banner">
+                    ❌ Erreur : {str(e)}
+                </div>
+                """, unsafe_allow_html=True)
+
+# ── Footer ────────────────────────────────────────────────────────────────────
+status_color = "🟢" if api_ok else "🔴"
+status_text  = "API connectée" if api_ok else "API non joignable"
+st.markdown("<br>", unsafe_allow_html=True)
+st.markdown(f"""
+<div class="footer-bar">
+    <span>Harry Potter Recognizer — 4IABD</span>
+    <span>{status_color} {status_text} — Service interne</span>
+</div>
+""", unsafe_allow_html=True)

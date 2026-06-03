@@ -7,6 +7,8 @@ services:
       - "8501:8501"
     depends_on:
       - api
+    environment:
+      - API_URL=http://api:8000   # ← ajoute cette ligne
     networks:
       - public-network
 

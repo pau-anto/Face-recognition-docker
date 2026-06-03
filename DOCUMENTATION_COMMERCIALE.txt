@@ -1,0 +1,574 @@
+================================================================================
+  DOCUMENTATION TECHNIQUE & COMMERCIALE
+  Face Recognition Docker — Harry Potter Character Recognizer
+  Version 1.0 | Branche : structure-docker
+================================================================================
+
+TABLE DES MATIÈRES
+------------------
+  1.  Présentation du produit
+  2.  Cas d'usage & public cible
+  3.  Architecture technique
+  4.  Guide d'installation rapide
+  5.  Configuration avancée
+  6.  Référence API
+  7.  Interface utilisateur — Guide d'utilisation
+  8.  Base de données — Référence
+  9.  Sécurité & Bonnes pratiques
+  10. FAQ & Dépannage
+  11. Roadmap & Évolutions
+  12. Support & Contact
+
+
+================================================================================
+1. PRÉSENTATION DU PRODUIT
+================================================================================
+
+  Face Recognition Docker est une application web de reconnaissance faciale
+  de personnages, déployée en architecture microservices Docker. Dans sa
+  version Harry Potter, elle identifie les personnages de la saga à partir
+  d'une photo uploadée par l'utilisateur.
+
+  Fonctionnalités clés :
+  ─────────────────────
+  ✓ Upload d'image (JPG / PNG) via interface web
+  ✓ Identification du personnage par IA
+  ✓ Affichage du score de confiance (0 % → 100 %)
+  ✓ Indicateur de statut en temps réel de l'API
+  ✓ Persistance des prédictions en base de données MySQL
+  ✓ Architecture entièrement containerisée (Docker)
+  ✓ Interface thématique Harry Potter avec badges de maison
+
+  Stack technique :
+  ─────────────────
+  • Python 3.11        — Langage principal
+  • Streamlit 1.32.0   — Framework interface web
+  • FastAPI            — Framework API REST (service IA)
+  • MySQL              — Base de données relationnelle
+  • Docker / Compose   — Containerisation et orchestration
+  • Pillow 10.2.0      — Traitement d'images
+
+  Prérequis système :
+  ───────────────────
+  • Docker Engine >= 20.0
+  • Docker Compose >= 2.0
+  • RAM : 2 Go minimum (4 Go recommandés pour le modèle IA)
+  • Espace disque : ~2 Go (images Docker incluses)
+  • OS : Linux, macOS, Windows 10/11 (avec WSL2)
+
+
+================================================================================
+2. CAS D'USAGE & PUBLIC CIBLE
+================================================================================
+
+  DÉMOS & ÉVÉNEMENTS
+  ──────────────────
+  Idéal pour des stands de démonstration technologique, events pop-culture,
+  escape games ou expériences interactives liées à l'univers Harry Potter.
+  Temps de déploiement < 5 minutes via Docker.
+
+  PROJETS PÉDAGOGIQUES
+  ────────────────────
+  Architecture de référence pour enseigner :
+  - Les microservices Docker
+  - L'intégration d'API machine learning dans une webapp
+  - Le déploiement containerisé d'applications Python
+
+  TEMPLATE DE DÉMARRAGE
+  ──────────────────────
+  Base réutilisable pour tout projet de reconnaissance faciale :
+  - Remplacez la base de personnages HP par votre propre dataset
+  - L'architecture frontend/API/BDD est générique et réutilisable
+  - Code modulaire facilement adaptable
+
+  PROTOTYPE IA
+  ────────────
+  Parfait comme MVP (Minimum Viable Product) pour valider un concept
+  de reconnaissance d'entités visuelles avant investissement production.
+
+
+================================================================================
+3. ARCHITECTURE TECHNIQUE
+================================================================================
+
+  DIAGRAMME DE SERVICES
+  ─────────────────────
+
+    ┌─────────────────────────────────────────────────────────┐
+    │                   Réseau Docker interne                  │
+    │                                                          │
+    │  ┌─────────────┐     HTTP      ┌──────────────────┐     │
+    │  │  FRONTEND   │ ────────────► │       API        │     │
+    │  │  Streamlit  │               │  Reconnaissance   │     │
+    │  │  :8501      │               │  faciale :8000   │     │
+    │  └─────────────┘               └──────────────────┘     │
+    │         ▲                               │                │
+    │         │                               │ SQL            │
+    │    [Navigateur]                         ▼                │
+    │                                ┌──────────────────┐     │
+    │                                │    DATABASE      │     │
+    │                                │     MySQL        │     │
+    │                                │     hpdb :3306   │     │
+    │                                └──────────────────┘     │
+    └─────────────────────────────────────────────────────────┘
+
+  DESCRIPTION DES SERVICES
+  ────────────────────────
+
+  [frontend]
+    Rôle    : Interface utilisateur accessible depuis le navigateur
+    Image   : python:3.11-slim
+    Port    : 8501 (exposé publiquement)
+    Env     : API_URL=http://api:8000
+    Fichiers: frontend/app.py, frontend/Dockerfile, frontend/requirements.txt
+
+  [api]
+    Rôle    : Service de reconnaissance faciale (modèle IA)
+    Port    : 8000 (interne uniquement)
+    Endpoints: POST /analyze/   → analyse une image
+               GET  /health     → vérification de disponibilité
+
+  [database]
+    Rôle    : Stockage des prédictions
+    Image   : mysql:8.0 (recommandé)
+    Port    : 3306 (interne uniquement)
+    Init    : database/init.sql exécuté au premier démarrage
+
+  STRUCTURE DES FICHIERS
+  ──────────────────────
+
+    Face-recognition-docker/
+    ├── frontend/
+    │   ├── app.py              ← Application principale Streamlit
+    │   ├── appv2.py            ← Version expérimentale (draft)
+    │   ├── Dockerfile          ← Image Docker du frontend
+    │   ├── requirements.txt    ← streamlit, requests, Pillow
+    │   └── tests/
+    │       └── test_app.py     ← Tests unitaires (à compléter)
+    ├── database/
+    │   ├── init.sql            ← Création BDD + table predictions
+    │   └── tests/
+    │       └── test_schema.sql ← Validation du schéma (à compléter)
+    ├── docker-compose.yml      ← Orchestration des services (à créer)
+    └── .gitignore              ← Exclusions Git
+
+
+================================================================================
+4. GUIDE D'INSTALLATION RAPIDE
+================================================================================
+
+  PRÉREQUIS
+  ─────────
+  Vérifiez que Docker est bien installé :
+
+    $ docker --version
+    Docker version 24.0.x, build ...
+
+    $ docker compose version
+    Docker Compose version v2.x.x
+
+  ÉTAPE 1 — Cloner le dépôt
+  ─────────────────────────
+    $ git clone https://github.com/pau-anto/Face-recognition-docker.git
+    $ cd Face-recognition-docker
+    $ git checkout structure-docker
+
+  ÉTAPE 2 — Lancer l'application
+  ───────────────────────────────
+    $ docker compose up --build
+
+    Les images Docker sont construites automatiquement au premier lancement.
+    Durée : 2-5 minutes selon la connexion internet.
+
+  ÉTAPE 3 — Accéder à l'interface
+  ────────────────────────────────
+    Ouvrez votre navigateur et accédez à :
+
+    ► http://localhost:8501
+
+  ARRÊTER L'APPLICATION
+  ──────────────────────
+    $ docker compose down
+
+    Pour supprimer également les volumes de données :
+    $ docker compose down -v
+
+
+================================================================================
+5. CONFIGURATION AVANCÉE
+================================================================================
+
+  VARIABLES D'ENVIRONNEMENT (frontend)
+  ─────────────────────────────────────
+
+    Variable   : API_URL
+    Défaut     : http://api:8000
+    Description: URL du service API de reconnaissance
+    Exemple    : API_URL=http://my-api-server.com:8000
+
+    Usage dans docker-compose.yml :
+      environment:
+        - API_URL=http://api:8000
+
+  CONFIGURATION MYSQL (database)
+  ───────────────────────────────
+
+    Nom de la base  : hpdb
+    Table           : predictions
+    Port interne    : 3306
+
+    Variables recommandées dans docker-compose.yml :
+      MYSQL_ROOT_PASSWORD=<mot_de_passe_sécurisé>
+      MYSQL_DATABASE=hpdb
+      MYSQL_USER=appuser
+      MYSQL_PASSWORD=<mot_de_passe_appuser>
+
+  PERSISTANCE DES DONNÉES
+  ────────────────────────
+
+    Pour conserver les données entre redémarrages, ajoutez un volume
+    dans docker-compose.yml :
+
+      volumes:
+        db_data:
+
+      services:
+        database:
+          volumes:
+            - db_data:/var/lib/mysql
+
+  PARAMÈTRES STREAMLIT
+  ────────────────────
+
+    Pour modifier les paramètres du serveur Streamlit (dans le Dockerfile) :
+
+      CMD ["streamlit", "run", "app.py",
+           "--server.address=0.0.0.0",
+           "--server.port=8501",
+           "--server.maxUploadSize=10"]   ← taille max en MB
+
+  PORT MAPPING PERSONNALISÉ
+  ──────────────────────────
+
+    Pour changer le port d'accès public (ex: 80 au lieu de 8501) :
+
+      ports:
+        - "80:8501"     # <port_hôte>:<port_conteneur>
+
+
+================================================================================
+6. RÉFÉRENCE API
+================================================================================
+
+  BASE URL (interne Docker) : http://api:8000
+
+  ──────────────────────────────────────────────────────────────────────────────
+  GET /health
+  ──────────────────────────────────────────────────────────────────────────────
+  Description  : Vérifier que l'API est disponible et prête
+  Authentif.   : Aucune
+
+  Réponse succès (200 OK) :
+    { "status": "ok" }
+
+  Réponse erreur (503 Service Unavailable) :
+    { "status": "unavailable" }
+
+  ──────────────────────────────────────────────────────────────────────────────
+  POST /analyze/
+  ──────────────────────────────────────────────────────────────────────────────
+  Description  : Analyser une image et identifier le personnage HP
+  Content-Type : multipart/form-data
+  Authentif.   : Aucune (réseau interne uniquement)
+
+  Paramètres :
+    file  [file, requis]  Image au format JPG ou PNG
+
+  Réponse succès (200 OK) :
+    {
+      "character"  : "Harry Potter",
+      "confidence" : 0.94
+    }
+
+  Champs de la réponse :
+    character   string  Nom du personnage identifié
+    confidence  float   Score de confiance entre 0.0 et 1.0
+
+  Réponses d'erreur :
+    400 Bad Request     — Image invalide ou format non supporté
+    422 Unprocessable   — Aucun visage détecté dans l'image
+    500 Internal Error  — Erreur interne du modèle IA
+    503 Unavailable     — Service temporairement indisponible
+
+  Exemple cURL :
+    curl -X POST http://api:8000/analyze/ \
+         -F "file=@harry.jpg"
+
+  Exemple Python (requests) :
+    import requests
+    with open("harry.jpg", "rb") as f:
+        r = requests.post("http://api:8000/analyze/",
+                         files={"file": f})
+    print(r.json())
+    # → {"character": "Harry Potter", "confidence": 0.94}
+
+
+================================================================================
+7. INTERFACE UTILISATEUR — GUIDE D'UTILISATION
+================================================================================
+
+  ACCÈS
+  ─────
+  Ouvrir : http://localhost:8501
+
+  ÉTAPES D'UTILISATION
+  ─────────────────────
+
+  1. VÉRIFIER LE STATUT DE L'API
+     ─────────────────────────────
+     Le footer affiche l'état de la connexion API :
+       🟢 "API connectée"     → Prêt à analyser
+       🔴 "API non joignable" → Vérifier que tous les services sont lancés
+
+  2. UPLOADER UNE IMAGE
+     ───────────────────
+     - Glisser-déposer un fichier JPG ou PNG dans la zone d'upload
+     - OU cliquer sur la zone et sélectionner un fichier
+     - Formats acceptés : JPG, JPEG, PNG
+     - Taille recommandée : < 5 Mo pour de meilleures performances
+
+  3. LANCER L'IDENTIFICATION
+     ────────────────────────
+     Cliquer sur le bouton "🔍 Identifier le personnage"
+     Note : le bouton est grisé si aucune image n'est uploadée
+     ou si l'API est hors ligne.
+
+  4. CONSULTER LE RÉSULTAT
+     ──────────────────────
+     La colonne droite affiche :
+     - Bannière verte avec le nom du personnage identifié
+     - Métrique de confiance (ex: "94%")
+     - Carte d'informations supplémentaires
+
+  CONSEILS POUR DE MEILLEURS RÉSULTATS
+  ──────────────────────────────────────
+  ✓ Utilisez des images avec un visage bien visible et net
+  ✓ Évitez les images trop sombres, floues ou de trop faible résolution
+  ✓ Une seule personne par image donne les meilleurs résultats
+  ✓ Les images de profil fonctionnent moins bien que les images de face
+
+
+================================================================================
+8. BASE DE DONNÉES — RÉFÉRENCE
+================================================================================
+
+  BASE : hpdb (MySQL)
+
+  TABLE : predictions
+  ────────────────────
+
+    Colonne         | Type          | Contrainte          | Description
+    ────────────────────────────────────────────────────────────────────────
+    id              | INT           | PK, AUTO_INCREMENT   | Identifiant unique
+    character_name  | VARCHAR(100)  | NOT NULL             | Personnage reconnu
+    confidence      | FLOAT         | NOT NULL             | Score (0.0 → 1.0)
+    created_at      | TIMESTAMP     | DEFAULT NOW()        | Horodatage
+
+  SCRIPT DE CRÉATION
+  ──────────────────
+
+    -- Fichier : database/init.sql
+    CREATE DATABASE IF NOT EXISTS hpdb;
+    USE hpdb;
+
+    CREATE TABLE IF NOT EXISTS predictions (
+        id             INT AUTO_INCREMENT PRIMARY KEY,
+        character_name VARCHAR(100) NOT NULL,
+        confidence     FLOAT NOT NULL,
+        created_at     TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    );
+
+  REQUÊTES UTILES
+  ────────────────
+
+    -- Voir les 10 dernières prédictions
+    SELECT * FROM predictions ORDER BY created_at DESC LIMIT 10;
+
+    -- Statistiques par personnage
+    SELECT character_name,
+           COUNT(*) AS nb_predictions,
+           AVG(confidence) AS confiance_moyenne
+    FROM predictions
+    GROUP BY character_name
+    ORDER BY nb_predictions DESC;
+
+    -- Prédictions avec confiance > 80%
+    SELECT * FROM predictions
+    WHERE confidence > 0.80
+    ORDER BY created_at DESC;
+
+  CONNEXION À LA BASE
+  ────────────────────
+  Depuis un outil externe (DBeaver, MySQL Workbench) ou CLI :
+
+    # CLI Docker
+    docker exec -it <nom_du_conteneur_mysql> mysql -u root -p hpdb
+
+    # Depuis l'hôte (si port 3306 exposé)
+    mysql -h 127.0.0.1 -P 3306 -u appuser -p hpdb
+
+
+================================================================================
+9. SÉCURITÉ & BONNES PRATIQUES
+================================================================================
+
+  RÉSEAU DOCKER
+  ─────────────
+  ✓ L'API et la base de données sont sur le réseau interne Docker uniquement
+  ✓ Seul le port 8501 (frontend) est exposé à l'extérieur
+  ✓ Les services communiquent par nom de service DNS Docker (pas d'IP exposées)
+
+  MOTS DE PASSE
+  ─────────────
+  ⚠ Ne jamais stocker les mots de passe MySQL en clair dans les fichiers
+    versionnés. Utiliser un fichier .env (listé dans .gitignore) :
+
+    # .env (ne pas committer)
+    MYSQL_ROOT_PASSWORD=monMotDePasse123!
+    MYSQL_PASSWORD=appPassword456!
+
+    # Référencer dans docker-compose.yml
+    env_file:
+      - .env
+
+  .GITIGNORE
+  ──────────
+  Le fichier .gitignore du projet exclut déjà les fichiers sensibles.
+  Vérifiez qu'il contient au minimum :
+
+    .env
+    venv/
+    __pycache__/
+    *.pyc
+    .DS_Store
+
+  IMAGES UPLOADÉES
+  ─────────────────
+  ⚠ Les images envoyées à l'API ne sont pas stockées durablement par défaut.
+  Si vous souhaitez les archiver, mettez en place un volume Docker dédié
+  avec des permissions restreintes.
+
+  HTTPS EN PRODUCTION
+  ────────────────────
+  Pour un déploiement en production, placez un reverse proxy (Nginx ou
+  Traefik) devant Streamlit avec un certificat SSL/TLS :
+
+    Nginx → https://monapp.com → Streamlit :8501
+
+
+================================================================================
+10. FAQ & DÉPANNAGE
+================================================================================
+
+  Q : Le bouton "Identifier" est grisé. Pourquoi ?
+  ─────────────────────────────────────────────────
+  R : Deux causes possibles :
+      1. Aucune image n'est uploadée
+      2. L'API est hors ligne (🔴 dans le footer)
+      → Vérifiez que tous les services sont lancés : docker compose ps
+
+  Q : L'indicateur API affiche 🔴 alors que les services sont lancés
+  ────────────────────────────────────────────────────────────────────
+  R : L'API met quelques secondes à démarrer au premier lancement.
+      Attendez 10-30 secondes et rafraîchissez la page.
+
+  Q : Erreur "Cannot connect to the Docker daemon"
+  ─────────────────────────────────────────────────
+  R : Docker Desktop n'est pas démarré.
+      → Lancez Docker Desktop ou : sudo systemctl start docker (Linux)
+
+  Q : Port 8501 déjà utilisé
+  ───────────────────────────
+  R : Changez le port dans docker-compose.yml :
+      ports: - "8502:8501"
+      Accédez ensuite via http://localhost:8502
+
+  Q : Les données disparaissent après docker compose down
+  ────────────────────────────────────────────────────────
+  R : Ajoutez un volume persistant pour MySQL dans docker-compose.yml.
+      Voir section 5 — Configuration avancée.
+
+  Q : Comment adapter le projet à d'autres personnages / datasets ?
+  ─────────────────────────────────────────────────────────────────
+  R : Le frontend est générique. Seul le service API doit être modifié
+      pour utiliser un autre modèle de reconnaissance.
+
+  Q : L'image uploadée ne donne pas de résultat
+  ──────────────────────────────────────────────
+  R : Vérifiez que :
+      - L'image contient un visage bien visible
+      - Le format est JPG ou PNG
+      - La taille est < 10 Mo
+      - L'API retourne bien un résultat via /analyze/ (testez avec cURL)
+
+
+================================================================================
+11. ROADMAP & ÉVOLUTIONS
+================================================================================
+
+  VERSION 1.0 (actuelle — branche structure-docker)
+  ───────────────────────────────────────────────────
+  ✓ Architecture Docker microservices
+  ✓ Interface Streamlit fonctionnelle
+  ✓ Schéma de base de données
+  ✓ Health check API
+  ✓ Gestion des erreurs dans l'interface
+
+  VERSION 1.1 (à venir)
+  ──────────────────────
+  → Intégration complète du modèle IA (service API)
+  → Tests unitaires et d'intégration
+  → Volume Docker pour persistance MySQL
+  → docker-compose.yml complet et documenté
+
+  VERSION 2.0 (roadmap)
+  ──────────────────────
+  → Historique des prédictions dans l'interface
+  → Support multi-images (batch)
+  → Dashboard de statistiques (confiance moyenne, personnages les plus reconnus)
+  → Export CSV des prédictions
+  → API authentifiée (JWT)
+  → Déploiement cloud (AWS ECS / Azure Container Apps)
+
+
+================================================================================
+12. SUPPORT & CONTACT
+================================================================================
+
+  DÉPÔT GIT
+  ──────────
+  https://github.com/pau-anto/Face-recognition-docker
+  Branche active : structure-docker
+
+  SIGNALER UN PROBLÈME
+  ─────────────────────
+  Créez une issue sur GitHub avec :
+  1. Description du problème
+  2. Étapes pour reproduire
+  3. Sortie de : docker compose ps && docker compose logs
+
+  CONTRIBUTION
+  ─────────────
+  Les contributions sont les bienvenues via Pull Requests sur la branche
+  structure-docker. Merci de suivre les conventions de code Python (PEP 8).
+
+  LICENCE
+  ───────
+  Projet académique — Usage éducatif.
+  Pour un usage commercial, contactez l'auteur via GitHub.
+
+================================================================================
+  Face Recognition Docker v1.0 — Documentation commerciale
+  Générée le : Juin 2026
+  Projet 4IABD
+================================================================================
